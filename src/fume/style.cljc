@@ -401,8 +401,8 @@
    (def stylesheet
      "Combined stylesheet rules. Indexed map of swatches as an argument"
      [normalize
-      [:html :body {:min-height (percent 100)}]
-      [:body {:color (theme 2)
+      [:body {:margin 0
+              :color (theme 2)
               :background (-> (theme 0)
                               (color/darken 2)
                               color/as-hex)}]
@@ -433,4 +433,5 @@
    (defn render
      "Output stylesheet to external file"
      []
-     (css {:output-to "resources/public/css/screen.css"} stylesheet)))
+     (css {:output-to "resources/public/css/screen.css"}
+          stylesheet)))

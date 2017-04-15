@@ -33,7 +33,7 @@
                  [com.domkm/silk              "0.1.2"]
 
                  [com.powernoodle/binnacle    "0.3.3"]
-                 [com.powernoodle/normalize   "0.1.3"]]
+                 [com.powernoodle/normalize   "6.0.0"]]
   :source-paths ["src" "test"]
   :main fume.server
   :profiles {:uberjar {:aot :all
