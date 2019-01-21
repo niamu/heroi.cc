@@ -1,17 +1,22 @@
 (ns heroicc.db.connection
   (:require
-   [datomic.client.api :as d]))
+   [datomic.client.api :as d]
+   [heroicc.config :refer [config]]))
 
 (def client
   "This function will return a local implementation of the client
   interface when run on a Datomic compute node. If you want to call
   locally, fill in the correct values in the map."
   (memoize
-   #(d/client {:server-type :ion
-               :region "us-east-1"
-               :system "heroicc"
-               :endpoint "http://entry.heroicc.us-east-1.datomic.net:8182"
-               :proxy-port 8182})))
+   #(d/client
+     {:server-type :ion
+      :region (:region config)
+      :system (:system config)
+      :endpoint (str "http://entry."
+                     (:system config) "."
+                     (:region config)
+                     ".datomic.net:8182")
+      :proxy-port 8182})))
 
 (defn- anom-map
   [category msg]
@@ -40,5 +45,5 @@
 
 (defn connection
   []
-  (ensure-dataset "heroicc"
+  (ensure-dataset (:system config)
                   'heroicc.db.init/load-dataset))

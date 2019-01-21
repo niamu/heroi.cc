@@ -9,10 +9,9 @@
    [garden.units :as units]
    [normalize.core :as normalize])
   #?(:cljs (:require-macros
-            [heroicc.web.style :refer [assets* defbreakpoint]])))
+            [heroicc.web.style :refer [defbreakpoint]])))
 
-#?(:clj (defmacro assets* [path] (binnacle/assets path)))
-#?(:clj (def assets (assets* "resources/assets")))
+#?(:clj (def assets (select-keys (binnacle/assets) [:assets])))
 
 (def theme
   "Teal and Orange"
@@ -43,8 +42,7 @@
    (def fonts
      ^{:doc "Web fonts to embed into CSS"}
      (-> {:font-family "Franchise"
-          :src (url (binnacle/data-url assets [:resources
-                                               :assets
+          :src (url (binnacle/data-url assets [:assets
                                                :fonts
                                                :franchise-bold.woff]))
           :font-weight :normal
@@ -252,15 +250,12 @@
          :display :block
          :position :absolute
          :background-image
-         (url (str "'"
-                   (-> (binnacle/data-url assets [:resources
-                                                  :assets
-                                                  :images
-                                                  :steam.svg])
-                       (string/replace "#fff" (theme 0))
-                       (string/replace "#000" "transparent")
-                       (string/replace "#" "%23"))
-                   "'"))
+         (url (-> (binnacle/data-url assets [:assets
+                                             :images
+                                             :steam.svg])
+                  (string/replace "%23fff" (theme 0))
+                  (string/replace "%23000" "transparent")
+                  (string/replace "#" "%23")))
          :width (units/percent 100)
          :height (units/percent 100)
          :top 0

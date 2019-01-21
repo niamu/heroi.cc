@@ -44,16 +44,14 @@
           [:a {:href "http://brendonwalsh.me"
                :title "Brendon Walsh"}
            [:img {:src (binnacle/data-url style/assets
-                                          [:resources
-                                           :assets
+                                          [:assets
                                            :images
                                            :brendonwalsh.jpg])
                   :alt "Brendon Walsh"}]]]
          [:li.steam
           [:a {:href "http://steampowered.com"
                :title "Powered by Steam"}
-           (get-in style/assets [:resources
-                                 :assets
+           (get-in style/assets [:assets
                                  :images
                                  :steam.svg])]]]
         [:small

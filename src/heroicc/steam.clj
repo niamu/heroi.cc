@@ -5,11 +5,12 @@
    [clojure.set :as set]
    [clojure.string :as string]
    [datomic.ion :as ion]
+   [heroicc.config :refer [config]]
    [org.httpkit.client :as http]))
 
 (def api-key
-  (get (ion/get-params {:path "/heroicc/"})
-       "steam-api-key"))
+  (get (ion/get-params {:path "/datomic-shared/" (:app-name config) "/"})
+       (str (:app-name config) "/steam-api-key")))
 
 (def key-fn (comp keyword #(clojure.string/replace % \_ \-)))
 

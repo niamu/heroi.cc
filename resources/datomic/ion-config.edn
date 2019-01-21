@@ -1,5 +1,7 @@
-{:app-name "heroicc"
+{:system "heroicc"
+ :region "us-east-2"
+ :app-name "heroicc"
  :allow [heroicc.web.server/app]
- :lambdas {:web.router {:fn heroicc.web.server/app
-                        :integration :api-gateway/proxy
-                        :description "Web app"}}}
+ :lambdas {:web {:fn heroicc.web.server/app
+                 :integration :api-gateway/proxy
+                 :description "heroi.cc web app"}}}

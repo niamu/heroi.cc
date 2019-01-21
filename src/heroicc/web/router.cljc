@@ -1,7 +1,7 @@
 (ns heroicc.web.router
   (:require
    [domkm.silk :as silk]
-   #?(:clj [domkm.silk.serve :refer [ring-handler]])
+   #?(:clj [domkm.silk.serve :as serve])
    [heroicc.db.init :as init]
    [heroicc.web.dashboard :as dashboard]
    [heroicc.web.error :as error]
@@ -79,7 +79,10 @@
 
 (defmethod response :stylesheet
   [route]
-  (serve route {:body (style/render) :headers {"Content-Type" "text/css"}}))
+  (fn [request]
+    {:status 200
+     :headers {"Content-Type" "text/css"}
+     :body (style/render)}))
 
 (defn route->response
   [matched-route]
@@ -87,7 +90,7 @@
 
 #?(:clj
    (def route-handler
-     (ring-handler routes/routes route->response)))
+     (serve/ring-handler routes/routes route->response)))
 
 #?(:cljs
    (defn path->name
