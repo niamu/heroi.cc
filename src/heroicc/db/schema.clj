@@ -1,0 +1,61 @@
+(ns heroicc.db.schema)
+
+(def app-title
+  [{:db/ident :app/title
+    :db/valueType :db.type/string
+    :db/unique :db.unique/identity
+    :db/cardinality :db.cardinality/one}])
+
+(def player
+  [{:db/ident :steam/id
+    :db/valueType :db.type/ref
+    :db/unique :db.unique/identity
+    :db/cardinality :db.cardinality/one}
+   {:db/ident :steam/player-name
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one}
+   {:db/ident :steam/avatar
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one}
+   {:db/ident :steam/url
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one}
+   {:db/ident :steam/public?
+    :db/valueType :db.type/boolean
+    :db/cardinality :db.cardinality/one}
+   {:db/ident :steam/friends
+    :db/valueType :db.type/ref
+    :db/cardinality :db.cardinality/many}
+   {:db/ident :steam/games
+    :db/valueType :db.type/ref
+    :db/cardinality :db.cardinality/many}])
+
+(def game
+  [{:db/ident :steam/appid
+    :db/valueType :db.type/ref
+    :db/unique :db.unique/identity
+    :db/cardinality :db.cardinality/one}
+   {:db/ident :steam/game-name
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one}
+   {:db/ident :steam/image
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one}
+   {:db/ident :steam/playtime
+    :db/valueType :db.type/long
+    :db/cardinality :db.cardinality/one}
+   {:db/ident :steam/categories
+    :db/valueType :db.type/ref
+    :db/cardinality :db.cardinality/many}
+   {:db/ident :steam/platforms
+    :db/valueType :db.type/keyword
+    :db/cardinality :db.cardinality/many}])
+
+(def categories
+  [{:db/ident :category/id
+    :db/valueType :db.type/ref
+    :db/unique :db.unique/identity
+    :db/cardinality :db.cardinality/one}
+   {:db/ident :category/description
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one}])

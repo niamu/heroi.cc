@@ -1,0 +1,3 @@
+#!/bin/sh
+
+clojure -A:dev -m datomic.ion.dev '{:op :deploy-status :execution-arn $1}'

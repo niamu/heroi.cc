@@ -1,0 +1,3 @@
+#!/bin/sh
+
+aws ssm put-parameter --name "/heroicc/steam-api-key" --type SecureString --value $1

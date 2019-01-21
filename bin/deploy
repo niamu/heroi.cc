@@ -1,0 +1,5 @@
+#!/bin/sh
+
+GROUP=$(aws deploy list-deployment-groups --application-name heroicc | jq ".deploymentGroups[]")
+
+clojure -A:dev -m datomic.ion.dev '{:op :deploy :rev $1 :group $GROUP}'
