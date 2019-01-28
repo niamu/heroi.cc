@@ -35,12 +35,7 @@
        [:div
         (common/header
          [:h1 {:data-title title}
-          [:a {:href (str (silk/depart routes/routes :dashboard)
-                          "?"
-                          (silk/encode-query
-                           {"openid.identity"
-                            (str "https://steamcommunity.com/openid/id/"
-                                 current-user)}))}
+          [:a {:href (silk/depart routes/routes :dashboard)}
            title]]
          [:h2
           [:span   "Reveal "]
@@ -84,10 +79,6 @@
                           :name "steamid"
                           :value (:steam/id p)}])
                players)
-          [:input {:type "hidden"
-                   :name "openid.identity"
-                   :value (str "https://steamcommunity.com/openid/id/"
-                               current-user)}]
           [:button.button {:type "submit"} "Filter Games"]]
          [:div.games (map common/game games)]]
         [:script#current-user {:type "text/plain"} current-user]]))))

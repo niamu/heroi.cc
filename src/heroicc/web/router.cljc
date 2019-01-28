@@ -46,36 +46,33 @@
 
 (defmethod response :games
   [route]
-  #?(:clj (fn [request]
-            (if-let [steamid
-                     (some->> (get-in request [:query-params "openid.identity"])
-                              (re-find #".*steamcommunity.com/openid/id/(\d+)")
-                              last
-                              (Long/parseLong))]
-              (do (init/load-player steamid)
-                  {:status 200
-                   :headers {"Content-Type" "text/html"}
-                   :body (->> (react-root request games/Games)
-                              dom/render-to-str
-                              (wrap/wrap route))})
-              (ring/redirect (silk/depart routes/routes :login))))
+  #?(:clj
+     (fn [request]
+       (if-let [steamid (state/steamid-from-request request)]
+         (do (init/load-player steamid)
+             {:status 200
+              :headers {"Content-Type" "text/html"}
+              :body (->> (react-root request games/Games)
+                         dom/render-to-str
+                         (wrap/wrap route))})
+         (ring/redirect (silk/depart routes/routes :login))))
      :cljs (serve route {:body games/Games})))
 
 (defmethod response :dashboard
   [route]
-  #?(:clj (fn [request]
-            (if-let [steamid
-                     (some->> (get-in request [:query-params "openid.identity"])
-                              (re-find #".*steamcommunity.com/openid/id/(\d+)")
-                              last
-                              (Long/parseLong))]
-              (do (init/load-player steamid)
-                  {:status 200
-                   :headers {"Content-Type" "text/html"}
-                   :body (->> (react-root request dashboard/Dashboard)
-                              dom/render-to-str
-                              (wrap/wrap route))})
-              (ring/redirect (silk/depart routes/routes :login))))
+  #?(:clj
+     (fn [request]
+       (if-let [steamid (state/steamid-from-request request)]
+         (do (init/load-player steamid)
+             (-> {:status 200
+                  :headers {"Content-Type" "text/html"}
+                  :body (->> (react-root request dashboard/Dashboard)
+                             dom/render-to-str
+                             (wrap/wrap route))}
+                 (assoc-in [:headers "Set-Cookie"]
+                           (str "steamid="steamid
+                                ";HttpOnly"))))
+         (ring/redirect (silk/depart routes/routes :login))))
      :cljs (serve route {:body dashboard/Dashboard})))
 
 (defmethod response :stylesheet
@@ -91,16 +88,7 @@
 
 #?(:clj
    (def route-handler
-     (with-redefs [serve/request-map->URL
-                   (fn [{:keys [scheme server-name server-port uri query-string] :as req}]
-                     (->> {:scheme :https
-                           :host (-> server-name (string/split #"\.") reverse vec)
-                           :port (str server-port)
-                           :path (silk/decode-path uri)
-                           :query (silk/decode-query query-string)}
-                          (merge req)
-                          silk/url))]
-       (serve/ring-handler routes/routes route->response))))
+     (serve/ring-handler routes/routes route->response)))
 
 #?(:cljs
    (defn path->name

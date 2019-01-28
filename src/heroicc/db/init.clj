@@ -4,7 +4,9 @@
    [datomic.client.api :as d]
    [heroicc.db.connection :as db]
    [heroicc.db.schema :as schema]
-   [heroicc.steam :as steam]))
+   [heroicc.steam :as steam])
+  (:import [java.util Date]
+           [java.time LocalDate]))
 
 (defn- has-ident?
   [db ident]
@@ -28,37 +30,47 @@
 
 (defn load-player*
   [current-user]
-  ;; Add all players and their games
-  (doseq [steamid (->> (map second (steam/player-friends current-user))
+  (when (empty? (d/q '[:find ?last-updated
+                       :in $ ?current-user
+                       :where [?e :steam/id ?steamid]
+                       [?e :app/last-updated ?last-updated]]
+                     (d/db (db/connection))
+                     current-user))
+    ;; Add all games of the player and their friends
+    (doseq [appid (->> (map second (steam/player-friends current-user))
                        (cons current-user)
+                       (map (fn [steamid] (steam/player-games steamid)))
+                       (apply concat)
+                       (map (fn [{:keys [steam/appid]}] appid))
                        set
                        (remove (set (flatten
-                                     (d/q '[:find ?steamid
-                                            :where [_ :steam/id ?steamid]]
+                                     (d/q '[:find ?appid
+                                            :where [?e :steam/appid ?appid]]
                                           (d/db (db/connection)))))))]
-    (when-let [player (steam/player-by-id steamid)]
+      (when-let [game (steam/game appid)]
+        (d/transact (db/connection)
+                    {:tx-data [game]})))
+    ;; Add all players and their games
+    (doseq [steamid (->> (map second (steam/player-friends current-user))
+                         set
+                         (remove (set (flatten
+                                       (d/q '[:find ?steamid
+                                              :where [_ :steam/id ?steamid]]
+                                            (d/db (db/connection)))))))]
+      (when-let [player (steam/player-by-id steamid)]
+        (d/transact (db/connection)
+                    {:tx-data [(assoc player
+                                      :steam/games
+                                      (steam/player-games steamid))]})))
+    ;; Add current-user
+    (let [player (steam/player-by-id current-user)]
       (d/transact (db/connection)
-                  {:tx-data [(cond-> player
-                               (= steamid current-user)
-                               (assoc :steam/friends
-                                      (steam/player-friends steamid))
-                               true
-                               (assoc :steam/games
-                                      (steam/player-games steamid)))]})))
-  ;; Add all games of the player and their friends
-  (doseq [appid (->> (map second (steam/player-friends current-user))
-                     (cons current-user)
-                     (map (fn [steamid] (steam/player-games steamid)))
-                     (apply concat)
-                     (map (fn [{:keys [steam/appid]}] appid))
-                     set
-                     (remove (set (flatten
-                                   (d/q '[:find ?appid
-                                          :where [_ :steam/appid ?appid]]
-                                        (d/db (db/connection)))))))]
-    (when-let [game (steam/game appid)]
-      (d/transact (db/connection)
-                  {:tx-data [game]}))))
+                  {:tx-data [(-> player
+                                 (assoc :steam/friends
+                                        (steam/player-friends current-user))
+                                 (assoc :steam/games
+                                        (steam/player-games current-user))
+                                 (assoc :app/last-updated (Date.)))]}))))
 
 (def load-player
-  (memoize/ttl load-player* :ttl/threshold (* 60 60 1000)))
+  (memoize/ttl load-player* :ttl/threshold (* 12 60 60 1000)))

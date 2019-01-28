@@ -11,6 +11,9 @@
     :db/valueType :db.type/ref
     :db/unique :db.unique/identity
     :db/cardinality :db.cardinality/one}
+   {:db/ident :app/last-updated
+    :db/valueType :db.type/instant
+    :db/cardinality :db.cardinality/one}
    {:db/ident :steam/player-name
     :db/valueType :db.type/string
     :db/cardinality :db.cardinality/one}

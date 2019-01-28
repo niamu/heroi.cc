@@ -7,11 +7,12 @@
    [garden.stylesheet :as stylesheet]
    [garden.selectors :as selectors]
    [garden.units :as units]
+   [heroicc.web.assets :as assets]
    [normalize.core :as normalize])
   #?(:cljs (:require-macros
             [heroicc.web.style :refer [defbreakpoint]])))
 
-#?(:clj (def assets (select-keys (binnacle/assets) [:assets])))
+#?(:clj (def assets assets/assets))
 
 (def theme
   "Teal and Orange"
@@ -42,9 +43,7 @@
    (def fonts
      ^{:doc "Web fonts to embed into CSS"}
      (-> {:font-family "Franchise"
-          :src (url (binnacle/data-url assets [:assets
-                                               :fonts
-                                               :franchise-bold.woff]))
+          :src (url "/fonts/franchise-bold.woff")
           :font-weight :normal
           :font-style :normal}
          stylesheet/at-font-face)))

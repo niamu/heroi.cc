@@ -43,10 +43,7 @@
          [:li.brendonwalsh
           [:a {:href "http://brendonwalsh.me"
                :title "Brendon Walsh"}
-           [:img {:src (binnacle/data-url style/assets
-                                          [:assets
-                                           :images
-                                           :brendonwalsh.jpg])
+           [:img {:src "/images/brendonwalsh.jpg"
                   :alt "Brendon Walsh"}]]]
          [:li.steam
           [:a {:href "http://steampowered.com"

@@ -4,8 +4,9 @@
    [datomic.ion.lambda.api-gateway :as apigw]
    [heroicc.web.router :as router]
    [org.httpkit.server :as server]
-   [ring.middleware.not-modified :as not-modified]
-   [ring.middleware.defaults :as defaults]))
+   [ring.middleware.cookies :as cookies]
+   [ring.middleware.defaults :as defaults]
+   [ring.middleware.not-modified :as not-modified]))
 
 (defonce ^:private server (atom nil))
 
@@ -14,13 +15,14 @@
   (fn [request]
     (handler (assoc request :scheme
                     (keyword (get-in request [:headers "x-forwarded-proto"]
-                                     "https"))))))
+                                     (:scheme request)))))))
 
 (def app-handler
   (-> router/route-handler
       (defaults/wrap-defaults (assoc-in defaults/site-defaults
                                         [:security :anti-forgery] false))
       not-modified/wrap-not-modified
+      cookies/wrap-cookies
       wrap-scheme))
 
 (def app

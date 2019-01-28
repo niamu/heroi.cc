@@ -6,6 +6,15 @@
    [heroicc.db.connection :as db]
    [om.next :as om]))
 
+(defn steamid-from-request
+  [request]
+  (or (some->> (get-in request [:query-params "openid.identity"])
+               (re-find #".*steamcommunity.com/openid/id/(\d+)")
+               last
+               (Long/parseLong))
+      (some->> (get-in request [:cookies "steamid" :value])
+               (Long/parseLong))))
+
 (defmulti read om/dispatch)
 
 (defmethod read :default
@@ -31,10 +40,7 @@
 
 (defn current-user
   [state]
-  #?(:clj (->> (get-in @state [:request :query-params "openid.identity"])
-               (re-find #".*steamcommunity.com/openid/id/(\d+)")
-               last
-               (Long/parseLong))
+  #?(:clj (steamid-from-request (:request @state))
      :cljs (.. (getElementById js/document "current-user")
                -textContent)))
 
@@ -67,7 +73,8 @@
 
 (defmethod read :app/players
   [{:keys [state query]} _ _]
-  (let [steamids (->> (get (query-params state) "steamid")
+  (let [steamids (->> (get (query-params state) "steamid" [])
+                      vector flatten
                       #?(:clj (mapv #(Long/parseLong %))))
         result (d/q '[:find (pull ?e pattern)
                       :in $ [?steamids ...] pattern
@@ -81,51 +88,55 @@
 
 (defmethod read :app/games
   [{:keys [state query]} _ _]
-  (let [search (get (query-params state) "search" "")
-        steamids (->> (get (query-params state) "steamid")
-                      #?(:clj (mapv #(Long/parseLong %))))
-        categories (->> (let [categories
-                              (get (query-params state) "category" [])]
-                          (if-not (coll? categories)
-                            [categories] categories))
-                        #?(:clj (mapv #(Integer/parseInt %))))
-        appids (->> (d/q '[:find (pull ?p pattern)
-                           :in $ [?steamids ...] pattern
-                           :where
-                           [?p :steam/id ?steamids]
-                           [?c :category/id ?categories]]
-                         (d/db (db/connection))
-                         steamids
-                         [{:steam/games [:steam/appid]}])
-                    (map (comp set :steam/games first))
-                    (apply set/intersection)
-                    (map #(get-in % [:steam/appid :db/id])))
-        result (->> (d/q '[:find (pull ?e query)
-                           :in $ [?appids ...] ?search query
-                           :where
-                           [?e :steam/appid ?appids]
-                           [?e :steam/game-name ?name]
-                           [(.toLowerCase ^String ?name) ?lowercase]
-                           [(.toLowerCase ^String ?search) ?s]
-                           [(.contains ^String ?lowercase ?s)]]
-                         (d/db (db/connection))
-                         appids
-                         search
-                         query)
-                    (map first)
-                    (filter (fn [game]
-                              (if-not (empty? categories)
-                                (every? (fn [c]
-                                          (-> (map (comp :db/id
-                                                         :category/id)
-                                                   (:steam/categories game))
-                                              set
-                                              (contains? c)))
-                                        categories)
-                                true))))]
-    {:value (->> result
-                 (map (fn [g] (update g :steam/appid #(:db/id %))))
-                 (filter (fn [g] (:steam/game-name g))))}))
+  (if (->> (get (query-params state) "steamid" [])
+           vector flatten count zero?)
+    {:value []}
+    (let [search (get (query-params state) "search" "")
+          steamids (->> (get (query-params state) "steamid" [])
+                        vector flatten
+                        #?(:clj (mapv #(Long/parseLong %))))
+          categories (->> (let [categories
+                                (get (query-params state) "category" [])]
+                            (if-not (coll? categories)
+                              [categories] categories))
+                          #?(:clj (mapv #(Integer/parseInt %))))
+          appids (->> (d/q '[:find (pull ?p pattern)
+                             :in $ [?steamids ...] pattern
+                             :where
+                             [?p :steam/id ?steamids]
+                             [?c :category/id ?categories]]
+                           (d/db (db/connection))
+                           steamids
+                           [{:steam/games [:steam/appid]}])
+                      (map (comp set :steam/games first))
+                      (apply set/intersection)
+                      (map #(get-in % [:steam/appid :db/id])))
+          result (->> (d/q '[:find (pull ?e query)
+                             :in $ [?appids ...] ?search query
+                             :where
+                             [?e :steam/appid ?appids]
+                             [?e :steam/game-name ?name]
+                             [(.toLowerCase ^String ?name) ?lowercase]
+                             [(.toLowerCase ^String ?search) ?s]
+                             [(.contains ^String ?lowercase ?s)]]
+                           (d/db (db/connection))
+                           appids
+                           search
+                           query)
+                      (map first)
+                      (filter (fn [game]
+                                (if-not (empty? categories)
+                                  (every? (fn [c]
+                                            (-> (map (comp :db/id
+                                                           :category/id)
+                                                     (:steam/categories game))
+                                                set
+                                                (contains? c)))
+                                          categories)
+                                  true))))]
+      {:value (->> result
+                   (map (fn [g] (update g :steam/appid #(:db/id %))))
+                   (filter (fn [g] (:steam/game-name g))))})))
 
 (defmethod read :steam/player
   [{:keys [state query]} _ params]

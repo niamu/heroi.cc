@@ -36,10 +36,10 @@
               (json/read-str :key-fn key-fn)))))
 
 (def steam-api
-  (memoize/ttl steam-api* :ttl/threshold (* 60 60 1000)))
+  (memoize/ttl steam-api* :ttl/threshold (* 12 60 60 1000)))
 
 (def steam-store
-  (memoize/ttl steam-store* :ttl/threshold (* 60 60 1000)))
+  (memoize/ttl steam-store* :ttl/threshold (* 12 60 60 1000)))
 
 (defn game
   [appid]

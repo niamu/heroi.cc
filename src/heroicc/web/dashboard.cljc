@@ -23,12 +23,7 @@
        [:div
         (common/header
          [:h1 {:data-title title}
-          [:a {:href (str (silk/depart routes/routes :dashboard)
-                          "?"
-                          (silk/encode-query
-                           {"openid.identity"
-                            (str "https://steamcommunity.com/openid/id/"
-                                 current-user)}))}
+          [:a {:href (silk/depart routes/routes :dashboard)}
            title]]
          [:h2
           [:span   "Reveal "]
@@ -54,14 +49,11 @@
                                     :disabled? (not public?)
                                     :value id
                                     :component (common/player p)}))
-                (map #(assoc % :steam/id (get-in % [:steam/id :db/id]))
-                     (:steam/friends player)))]
+                (->> (:steam/friends player)
+                     (map #(assoc % :steam/id (get-in % [:steam/id :db/id])))
+                     (sort-by :steam/id)))]
           [:input {:type "hidden"
                    :name "steamid"
                    :value current-user}]
-          [:input {:type "hidden"
-                   :name "openid.identity"
-                   :value (str "https://steamcommunity.com/openid/id/"
-                               current-user)}]
           [:button.button {:type "submit"} "Find Common Games"]]]
         [:script#current-user {:type "text/plain"} current-user]]))))
