@@ -9,22 +9,19 @@
 
 (defonce ^:private server (atom nil))
 
+(defn wrap-scheme
+  [handler]
+  (fn [request]
+    (handler (assoc request :scheme
+                    (keyword (get-in request [:headers "x-forwarded-proto"]
+                                     "https"))))))
+
 (def app-handler
-  (-> (fn [request]
-        (router/route-handler
-         (if-not (:scheme request)
-           (assoc request
-                  :scheme (-> request
-                              (get-in [:headers "x-forwarded-proto"])
-                              keyword))
-           request)))
+  (-> router/route-handler
       (defaults/wrap-defaults (assoc-in defaults/site-defaults
                                         [:security :anti-forgery] false))
-      not-modified/wrap-not-modified))
-
-#_(-> (slurp "resources/api-test.json")
-      apigw/gateway->edn
-      app-handler)
+      not-modified/wrap-not-modified
+      wrap-scheme))
 
 (def app
   (apigw/ionize app-handler))

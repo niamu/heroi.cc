@@ -1,5 +1,6 @@
 (ns heroicc.web.router
   (:require
+   [clojure.string :as string]
    [domkm.silk :as silk]
    #?(:clj [domkm.silk.serve :as serve])
    [heroicc.db.init :as init]
@@ -90,7 +91,16 @@
 
 #?(:clj
    (def route-handler
-     (serve/ring-handler routes/routes route->response)))
+     (with-redefs [serve/request-map->URL
+                   (fn [{:keys [scheme server-name server-port uri query-string] :as req}]
+                     (->> {:scheme :https
+                           :host (-> server-name (string/split #"\.") reverse vec)
+                           :port (str server-port)
+                           :path (silk/decode-path uri)
+                           :query (silk/decode-query query-string)}
+                          (merge req)
+                          silk/url))]
+       (serve/ring-handler routes/routes route->response))))
 
 #?(:cljs
    (defn path->name
