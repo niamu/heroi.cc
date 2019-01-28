@@ -16,14 +16,14 @@
         com.niamu/binnacle {:mvn/version "0.4.0-alpha1"}
         com.powernoodle/normalize {:mvn/version "7.0.0"}
 
-        ;; com.cognitect/transit-java {:mvn/version "0.8.311"}
-        ;; commons-codec/commons-codec {:mvn/version "1.10"}
-        ;; com.fasterxml.jackson.core/jackson-core {:mvn/version "2.9.5"}
-        ;; com.google.guava/guava {:mvn/version "18.0"}
-        ;; org.msgpack/msgpack {:mvn/version "0.6.10"}
-        ;; com.cognitect/transit-clj {:mvn/version "0.8.285"}
-        ;; org.clojure/tools.reader {:mvn/version "1.0.0-beta4"}
-        }
+        ;; deps conflict resolution
+        com.cognitect/transit-java {:mvn/version "0.8.311"}
+        commons-codec/commons-codec {:mvn/version "1.10"}
+        com.fasterxml.jackson.core/jackson-core {:mvn/version "2.9.5"}
+        com.google.guava/guava {:mvn/version "18.0"}
+        org.msgpack/msgpack {:mvn/version "0.6.10"}
+        com.cognitect/transit-clj {:mvn/version "0.8.285"}
+        org.clojure/tools.reader {:mvn/version "1.0.0-beta4"}}
  :mvn/repos {"datomic-cloud"
              {:url "s3://datomic-releases-1fc2183a/maven/releases"}}
  :aliases
