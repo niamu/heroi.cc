@@ -1,6 +1,7 @@
 (ns heroicc.web.games
   (:require
    [clojure.set :as set]
+   [clojure.string :as string]
    [domkm.silk :as silk]
    [heroicc.web.common :as common]
    [heroicc.web.routes :as routes]
@@ -60,7 +61,7 @@
           [:p "Find common games with selected friends and yourself."]
           [:input {:type "text"
                    :name "search"
-                   :value (or search "")
+                   :value search
                    :placeholder "Search game titles..."}]
           [:ul.tags (map (fn [{:keys [category/description category/id]}]
                            [:li.tag
@@ -80,5 +81,12 @@
                           :value (:steam/id p)}])
                players)
           [:button.button {:type "submit"} "Filter Games"]]
-         [:div.games (map common/game games)]]
+         [:div.games
+          (->> games
+               (filter (fn [g]
+                         (string/includes? (-> (:steam/game-name g)
+                                               string/lower-case)
+                                           (string/lower-case search))))
+               (sort-by :steam/game-name)
+               (map common/game))]]
         [:script#current-user {:type "text/plain"} current-user]]))))

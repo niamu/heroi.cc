@@ -17,8 +17,18 @@
                     (keyword (get-in request [:headers "x-forwarded-proto"]
                                      (:scheme request)))))))
 
+(defn wrap-multi-value-query
+  [handler]
+  (fn [request]
+    (handler (reduce (fn [accl [k v]]
+                       (update accl :query-params merge {(name k) v}))
+                     request
+                     (get-in request [:datomic.ion.edn.api-gateway/data
+                                      :multiValueQueryStringParameters])))))
+
 (def app-handler
   (-> router/route-handler
+      wrap-multi-value-query
       (defaults/wrap-defaults (assoc-in defaults/site-defaults
                                         [:security :anti-forgery] false))
       not-modified/wrap-not-modified

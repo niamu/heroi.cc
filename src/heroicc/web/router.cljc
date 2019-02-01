@@ -49,12 +49,19 @@
   #?(:clj
      (fn [request]
        (if-let [steamid (state/steamid-from-request request)]
-         (do (init/load-player steamid)
-             {:status 200
-              :headers {"Content-Type" "text/html"}
-              :body (->> (react-root request games/Games)
-                         dom/render-to-str
-                         (wrap/wrap route))})
+         (case (->> (get-in request [:query-params "steamid"] [])
+                    vector flatten count zero?)
+           true {:status 400
+                 :headers {"Content-Type" "text/html"}
+                 :body (->> (react-root request error/ErrorPage)
+                            dom/render-to-str
+                            (wrap/wrap route))}
+           false (do (init/load-player steamid)
+                     {:status 200
+                      :headers {"Content-Type" "text/html"}
+                      :body (->> (react-root request games/Games)
+                                 dom/render-to-str
+                                 (wrap/wrap route))}))
          (ring/redirect (silk/depart routes/routes :login))))
      :cljs (serve route {:body games/Games})))
 

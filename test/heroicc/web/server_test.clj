@@ -1,7 +1,8 @@
 (ns heroicc.web.server-test
-  (:require [datomic.ion.lambda.api-gateway :as apigw]
-            [heroicc.web.server :as server]
-            [clojure.test :as t]))
+  (:require [clojure.data.json :as json]
+            [clojure.test :as t]
+            [datomic.ion.lambda.api-gateway :as apigw]
+            [heroicc.web.server :as server]))
 
 (t/deftest login-request
   (t/testing "Login request results in 200 response"
@@ -31,10 +32,12 @@
 (t/deftest dashboard-request
   (t/testing "Dashboard"
     (t/is (= (-> (slurp "resources/test/aws-apigw/dashboard.json")
+                 (json/read-str :key-fn keyword)
+                 (assoc-in ["queryStringParameters"]
+                           {"openid.identity"
+                            "https://steamcommunity.com/openid/id/76561197997007156"})
+                 json/write-str
                  apigw/gateway->edn
-                 (assoc :query-string
-                        (str "openid.identity=https%3A%2F%2Fsteamcommunity.com"
-                             "%2Fopenid%2Fid%2F76561197997007156"))
                  server/app-handler
                  (dissoc :body))
              {:status 200
@@ -47,13 +50,21 @@
 (t/deftest games-request
   (t/testing "Games"
     (t/is (= (-> (slurp "resources/test/aws-apigw/dashboard.json")
+                 (json/read-str :key-fn keyword)
+                 (assoc-in [:multiValueQueryStringParameters]
+                           {:steamid ["76561197997007156"
+                                      "76561197981157470"
+                                      "76561197984746117"
+                                      "76561197982284209"]
+                            :category ["1" "9"]})
+                 (assoc-in [:queryStringParameters]
+                           {:steamid "76561197982284209"
+                            :search "dota"
+                            :category "1"})
+                 (assoc-in [:headers :Cookie] "steamid=76561197997007156")
+                 (assoc :path "/games")
+                 json/write-str
                  apigw/gateway->edn
-                 (assoc :uri "/games")
-                 (assoc :query-string
-                        (str "openid.identity=https%3A%2F%2Fsteamcommunity.com"
-                             "%2Fopenid%2Fid%2F76561197997007156"
-                             "&steamid=76561198073236340"
-                             "&steamid=76561197997007156"))
                  server/app-handler
                  (dissoc :body))
              {:status 200

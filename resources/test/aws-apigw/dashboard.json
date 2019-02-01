@@ -6,6 +6,8 @@
     "isBase64Encoded": true,
     "queryStringParameters": {
     },
+    "multiValueQueryStringParameters": {
+    }
     "pathParameters": {
         "proxy": "/"
     },
