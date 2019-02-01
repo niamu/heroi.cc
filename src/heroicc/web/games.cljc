@@ -59,10 +59,10 @@
            :method "get"}
           [:h2 "Filter Games"]
           [:p "Find common games with selected friends and yourself."]
-          [:input {:type "text"
-                   :name "search"
-                   :value search
-                   :placeholder "Search game titles..."}]
+          #_[:input {:type "text"
+                     :name "search"
+                     :value search
+                     :placeholder "Search game titles..."}]
           [:ul.tags (map (fn [{:keys [category/description category/id]}]
                            [:li.tag
                             (common/checkbox
@@ -83,10 +83,10 @@
           [:button.button {:type "submit"} "Filter Games"]]
          [:div.games
           (->> games
-               (filter (fn [g]
-                         (string/includes? (-> (:steam/game-name g)
-                                               string/lower-case)
-                                           (string/lower-case search))))
+               #_(filter (fn [g]
+                           (string/includes? (-> (:steam/game-name g)
+                                                 string/lower-case)
+                                             (string/lower-case search))))
                (sort-by :steam/game-name)
                (map common/game))]]
         [:script#current-user {:type "text/plain"} current-user]]))))
