@@ -12,16 +12,6 @@
   [subtitle]
   (cond->> "Heroicc" (not-empty subtitle) (str subtitle " - ")))
 
-(defn header
-  "Returns markup for the header with screenshot and optional children"
-  [& children]
-  [:header
-   {:style {:background-image (str "url(/images/background/"
-                                   #?(:clj (.getDayOfMonth (LocalDate/now))
-                                      :cljs (.getDate (Date.)))
-                                   ".jpg)")}}
-   children])
-
 (defn hexagon-path
   [x y radius]
   (let [pi #?(:clj (Math/PI)

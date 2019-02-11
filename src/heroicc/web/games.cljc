@@ -12,8 +12,7 @@
 (om/defui Games
   static om/IQuery
   (query [_]
-    [:app/title
-     :app/current-user
+    [:app/current-user
      :app/search
      :app/categories
      {:app/players [:steam/id
@@ -25,8 +24,7 @@
        {:steam/id :app/current-user})])
   Object
   (render [this]
-    (let [{:keys [app/title
-                  app/current-user
+    (let [{:keys [app/current-user
                   app/search
                   app/categories
                   app/players
@@ -34,16 +32,6 @@
                   steam/player] :as props} (om/props this)]
       (sablono/html
        [:div
-        (common/header
-         [:h1 {:data-title title}
-          [:a {:href (silk/depart routes/routes :dashboard)}
-           title]]
-         [:h2
-          [:span   "Reveal "]
-          [:strong "common games"]
-          [:span   " with "]
-          [:strong "Steam"]
-          [:span   " friends."]])
         [:div.container
          [:div.user
           [:a {:href (:steam/url player)}

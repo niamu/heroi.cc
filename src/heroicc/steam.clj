@@ -17,23 +17,19 @@
 (defn steam-api*
   [path params]
   (let [response @(http/get (str "http://api.steampowered.com" path)
-                            {:query-params
-                             (merge {:key api-key
-                                     :format "json"}
-                                    params)})]
+                            {:query-params (merge {:key api-key
+                                                   :format "json"}
+                                                  params)})]
     (when (= 200 (:status response))
-      (some-> response
-              :body
-              (json/read-str :key-fn key-fn)))))
+      (json/read-str (:body response) :key-fn key-fn))))
 
 (defn steam-store*
   [path params]
   (let [response @(http/get (str "http://store.steampowered.com/api" path)
                             {:query-params params})]
     (when (= 200 (:status response))
-      (some-> response
-              :body
-              (json/read-str :key-fn key-fn)))))
+      (get-in (json/read-str (:body response) :key-fn key-fn)
+              [(keyword (str (:appids params))) :data]))))
 
 (def steam-api
   (memoize/ttl steam-api* :ttl/threshold (* 12 60 60 1000)))
@@ -43,36 +39,32 @@
 
 (defn game
   [appid]
-  (let [game (get-in (steam-store "/appdetails"
-                                  {:appids appid
-                                   :filters (string/join #","
-                                                         ["basic"
-                                                          "categories"
-                                                          "platforms"])})
-                     [(keyword (str appid)) :data])]
-    (if (:steam-appid game)
-      (if (= (:steam-appid game) appid)
-        (-> game
-            (select-keys [:steam-appid
-                          :header-image
-                          :categories
-                          :name
-                          :platforms])
-            (update-in [:categories]
-                       #(mapv (fn [{:keys [id description]}]
-                                {:category/id id
-                                 :category/description description}) %))
-            (update-in [:platforms]
-                       (fn [platforms]
-                         (->> (filter val platforms)
-                              (map #(keyword "platform" (name (key %))))
-                              set)))
-            (set/rename-keys {:steam-appid  :steam/appid
-                              :name         :steam/game-name
-                              :header-image :steam/image
-                              :categories   :steam/categories
-                              :platforms    :steam/platforms}))
-        {:steam/appid appid})
+  (let [game (steam-store "/appdetails"
+                          {:appids appid
+                           :filters (string/join #"," ["basic"
+                                                       "categories"
+                                                       "platforms"])})]
+    (if (= (:steam-appid game) appid)
+      (-> game
+          (select-keys [:steam-appid
+                        :header-image
+                        :categories
+                        :name
+                        :platforms])
+          (update-in [:categories]
+                     #(mapv (fn [{:keys [id description]}]
+                              {:category/id id
+                               :category/description description}) %))
+          (update-in [:platforms]
+                     (fn [platforms]
+                       (->> (filter val platforms)
+                            (map #(keyword "platform" (name (key %))))
+                            set)))
+          (set/rename-keys {:steam-appid  :steam/appid
+                            :name         :steam/game-name
+                            :header-image :steam/image
+                            :categories   :steam/categories
+                            :platforms    :steam/platforms}))
       {:steam/appid appid})))
 
 (defn player-by-id
@@ -111,7 +103,7 @@
   (some->> (get-in (steam-api "/IPlayerService/GetOwnedGames/v0001"
                               {:steamid steamid
                                :include_played_free_games 1})
-                   [:response :games])
+                   [:response :games] [])
            (mapv (comp #(set/rename-keys % {:appid            :steam/appid
                                             :playtime-forever :steam/playtime})
                        #(select-keys % [:appid :playtime-forever])))))

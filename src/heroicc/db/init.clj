@@ -28,14 +28,17 @@
                    schema/categories]]
       (d/transact conn {:tx-data datom}))))
 
-(defn load-player*
+(defn load-player
   [current-user]
+  ;; TODO: Refresh if last-updated is too old
   (when (empty? (d/q '[:find ?last-updated
-                       :in $ ?current-user
-                       :where [?e :steam/id ?steamid]
+                       :in $ ?steamid
+                       :where
+                       [?e :steam/id ?steamid]
                        [?e :app/last-updated ?last-updated]]
                      (d/db (db/connection))
-                     current-user))
+                     current-user
+                     [:app/last-updated]))
     ;; Add all games of the player and their friends
     (doseq [appid (->> (map second (steam/player-friends current-user))
                        (cons current-user)
@@ -43,21 +46,23 @@
                        (apply concat)
                        (map (fn [{:keys [steam/appid]}] appid))
                        set
-                       (remove (set (flatten
-                                     (d/q '[:find ?appid
-                                            :where [?e :steam/appid ?appid]]
-                                          (d/db (db/connection)))))))]
+                       (remove
+                        (set (flatten
+                              (d/q '[:find ?appid
+                                     :where [?e :steam/appid ?appid]]
+                                   (d/db (db/connection)))))))]
       (when-let [game (steam/game appid)]
-        (d/transact (db/connection)
-                    {:tx-data [game]})))
+        (d/transact (db/connection) {:tx-data [game]})))
     ;; Add all players and their games
     (doseq [steamid (->> (map second (steam/player-friends current-user))
                          set
-                         (remove (set (flatten
-                                       (d/q '[:find ?steamid
-                                              :where [_ :steam/id ?steamid]]
-                                            (d/db (db/connection)))))))]
+                         (remove
+                          (set (flatten
+                                (d/q '[:find ?steamid
+                                       :where [_ :steam/id ?steamid]]
+                                     (d/db (db/connection)))))))]
       (when-let [player (steam/player-by-id steamid)]
+        (prn :player steamid)
         (d/transact (db/connection)
                     {:tx-data [(assoc player
                                       :steam/games
@@ -71,6 +76,3 @@
                                  (assoc :steam/games
                                         (steam/player-games current-user))
                                  (assoc :app/last-updated (Date.)))]}))))
-
-(def load-player
-  (memoize/ttl load-player* :ttl/threshold (* 12 60 60 1000)))

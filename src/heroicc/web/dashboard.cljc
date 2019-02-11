@@ -10,27 +10,14 @@
 (om/defui Dashboard
   static om/IQuery
   (query [_]
-    [:app/title
-     :app/current-user
+    [:app/current-user
      `({:steam/player ~(om/get-query common/Player)}
        {:steam/id :app/current-user})])
   Object
   (render [this]
-    (let [{:keys [app/title
-                  app/current-user
-                  steam/player] :as props} (om/props this)]
+    (let [{:keys [app/current-user steam/player] :as props} (om/props this)]
       (sablono/html
        [:div
-        (common/header
-         [:h1 {:data-title title}
-          [:a {:href (silk/depart routes/routes :dashboard)}
-           title]]
-         [:h2
-          [:span   "Reveal "]
-          [:strong "common games"]
-          [:span   " with "]
-          [:strong "Steam"]
-          [:span   " friends."]])
         [:div.container
          [:div.user
           (common/hexagon-img {:size 128

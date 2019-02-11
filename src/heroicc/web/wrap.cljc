@@ -36,6 +36,22 @@
        [:meta {:name "viewport" :content "width=device-width,initial-scale=1"}]
        (h/include-css (silk/depart routes/routes :stylesheet))]
       [:body
+       [:header
+        {:class route
+         :style (str "background-image:url(/images/background/"
+                     #?(:clj (.getDayOfMonth (LocalDate/now))
+                        :cljs (.getDate (Date.)))
+                     ".jpg)")}
+        [:h1 {:data-title (common/title nil)}
+         [:a {:href (silk/depart routes/routes :dashboard)}
+          (common/title nil)]]
+        (when (= :login route)
+          [:h2
+           [:span   "Reveal "]
+           [:strong "common games"]
+           [:span   " with "]
+           [:strong "Steam"]
+           [:span   " friends."]])]
        [:div#app body]
        [:hr]
        [:footer.container
@@ -43,7 +59,8 @@
          [:li.brendonwalsh
           [:a {:href "http://brendonwalsh.me"
                :title "Brendon Walsh"}
-           [:img {:src "/images/brendonwalsh.jpg"
+           [:img {:src (binnacle/data-url style/assets
+                                          [:assets :images :brendonwalsh.jpg])
                   :alt "Brendon Walsh"}]]]
          [:li.steam
           [:a {:href "http://steampowered.com"

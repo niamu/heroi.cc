@@ -9,6 +9,7 @@
 (defn steamid-from-request
   [request]
   (or (some->> (get-in request [:query-params "openid.identity"])
+               vector flatten first
                (re-find #".*steamcommunity.com/openid/id/(\d+)")
                last
                (Long/parseLong))
@@ -18,18 +19,8 @@
 (defmulti read om/dispatch)
 
 (defmethod read :default
-  [_ key _]
-  (let [result (try (d/q '[:find ?x
-                           :in $ ?key
-                           :where [_ ?key ?x]]
-                         (d/db (db/connection))
-                         key)
-                    (catch Exception e [["not-found"]]))]
-    (if (empty? result)
-      {:remote true}
-      (if (= 1 (count result))
-        {:value (ffirst result)}
-        {:value result}))))
+  [_ _ _]
+  {:value "not-found"})
 
 (defmethod read :app/host
   [{:keys [state]} _ _]

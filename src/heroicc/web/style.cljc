@@ -43,7 +43,9 @@
    (def fonts
      ^{:doc "Web fonts to embed into CSS"}
      (-> {:font-family "Franchise"
-          :src (url "/fonts/franchise-bold.woff")
+          :src (url (binnacle/data-url assets [:assets
+                                               :fonts
+                                               :franchise-bold.woff]))
           :font-weight :normal
           :font-style :normal}
          stylesheet/at-font-face)))
@@ -118,18 +120,13 @@
 #?(:clj
    (def header
      "Rules for the header look and feel"
-     [#_(stylesheet/at-keyframes
-         :header-cycle
-         ["0%" {:background-position-x (units/percent 0)}]
-         ["50%" {:background-position-x (units/percent 100)}]
-         ["100%" {:background-position-x (units/percent 0)}])
-      [:header
+     [[:header
        {:position :relative
-        :padding (units/em 2)
+        :padding (units/em 0.75)
         :z-index 1
         :text-align :center
         :color (theme 0)
-        :background-position [[(units/percent 50) (units/percent 15)]]
+        :background-position [[(units/percent 50) (units/percent 25)]]
         :background-size :cover}
        [:&:after :&:before
         {:position :absolute
@@ -149,13 +146,17 @@
         {:opacity 0.85
          :z-index -1
          :background (radial-gradient (theme 2) (theme 1))
-         :background-size (units/percent 150)
-         #_:animation #_[[:header-cycle (units/s 20) :infinite]]}]
+         :background-size (units/percent 150)}]
+       [:&.login
+        {:padding (units/em 2)
+         :background-position [[(units/percent 50) (units/percent 15)]]}
+        [:h1 {:font-size (units/vmin 32)}]]
        [:&>
-        [:h1 {:display :inline-block
-              :font-size (units/vmin 32)
-              :color (theme 1)
-              :transition [[(units/s 0.15) :linear :color]]}
+        [:h1
+         {:display :inline-block
+          :font-size (units/vmin 15)
+          :color (theme 1)
+          :transition [[(units/s 0.15) :linear :color]]}
          [:&:before
           {:position :absolute
            :z-index -1
@@ -226,7 +227,11 @@
    (def user
      [[:div.user
        {:display :flex
-        :justify-content :center}
+        :justify-content :center
+        :margin [[0 :auto]]
+        :max-width (units/px 400)
+        :width (units/percent 100)
+        :margin-top (units/em -3)}
        [:svg {:flex-shrink 0}]
        [:h2
         {:font-size (units/em 3.5)

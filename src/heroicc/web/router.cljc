@@ -71,14 +71,12 @@
      (fn [request]
        (if-let [steamid (state/steamid-from-request request)]
          (do (init/load-player steamid)
-             (-> {:status 200
-                  :headers {"Content-Type" "text/html"}
-                  :body (->> (react-root request dashboard/Dashboard)
-                             dom/render-to-str
-                             (wrap/wrap route))}
-                 (assoc-in [:headers "Set-Cookie"]
-                           (str "steamid="steamid
-                                ";HttpOnly"))))
+             {:status 200
+              :headers {"Content-Type" "text/html"
+                        "Set-Cookie" (str "steamid=" steamid ";HttpOnly")}
+              :body (->> (react-root request dashboard/Dashboard)
+                         dom/render-to-str
+                         (wrap/wrap route))})
          (ring/redirect (silk/depart routes/routes :login))))
      :cljs (serve route {:body dashboard/Dashboard})))
 
