@@ -20,11 +20,12 @@
        [:div
         [:div.container
          [:div.user
-          (common/hexagon-img {:size 128
-                               :src (:steam/avatar player)
-                               :alt (:steam/player-name player)
-                               :border-color (style/theme 2)})
-          [:h2 (:steam/player-name player)]]
+          [:a {:href (:steam/url player)}
+           (common/hexagon-img {:size 128
+                                :src (:steam/avatar player)
+                                :alt (:steam/player-name player)
+                                :border-color (style/theme 2)})]
+          [:h2 [:a {:href (:steam/url player)} (:steam/player-name player)]]]
          [:form.friends.container
           {:action (silk/depart routes/routes :games)
            :method "get"}

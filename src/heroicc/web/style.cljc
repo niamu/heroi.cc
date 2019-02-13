@@ -85,7 +85,8 @@
    (def button
      "Basic rules for buttons"
      [:.button
-      {:display :table
+      {:outline :none
+       :display :table
        :text-align :center
        :margin [[0 :auto]]
        :border :none
@@ -103,6 +104,11 @@
        :transition [[:transform :ease-in-out (units/s 0.05)]
                     [:box-shadow :ease-in-out (units/s 0.05)]
                     [:background-color :ease-in-out (units/s 0.05)]]}
+      [:&:focus
+       {:box-shadow [[0 0 (units/px 1) (units/px 2) (theme 1)]
+                     [0 (units/px 2) (units/px 15) (-> (theme 2)
+                                                       color/as-rgb
+                                                       (assoc :alpha 0.2))]]}]
       [:&:hover
        {:transform (scale 1.015)
         :box-shadow [[0 (units/px 2) (units/px 15) (-> (theme 2)
@@ -172,7 +178,12 @@
           {:color (-> (theme 2)
                       (color/darken 10))}]
          [:a {:color :inherit
-              :transition :inherit}
+              :transition :inherit
+              :outline :none
+              :padding [[0 (units/em 0.1)]]
+              :border-radius (units/px 1)}
+          [:&:focus
+           {:box-shadow [[0 0 (units/px 1) (units/px 2)]]}]
           [:&:hover {:color (-> (theme 1)
                                 (color/lighten 3))}]]]
         [:h2 {:font-size (units/vmin 3.6)
@@ -219,9 +230,14 @@
             {:fill (theme 3)}]
            [:&:last-child
             {:fill (theme 0)}]]]]
-        [:img :svg {:width (units/px 32)
-                    :height (units/px 32)
-                    :border-radius (units/percent 50)}]]]]))
+        [:a
+         {:outline :none}
+         [:&:focus
+          [:img :svg
+           {:box-shadow [[0 0 (units/px 1) (units/px 2) (theme 1)]]}]]
+         [:img :svg {:width (units/px 32)
+                     :height (units/px 32)
+                     :border-radius (units/percent 50)}]]]]]))
 
 #?(:clj
    (def user
@@ -271,7 +287,12 @@
 #?(:clj
    (def checkbox
      [[:div.checkbox-wrapper
-       [:input {:display :none}]
+       {:position :relative}
+       [:input {:position :absolute
+                :outline :none
+                :opacity 0
+                :width (units/percent 100)
+                :height (units/percent 100)}]
        [:label {:display :block
                 :cursor :pointer}]
        [(selectors/> (selectors/+ :input :label) :*)
@@ -298,6 +319,8 @@
         [:div.player.element [:rect.checked {:display :block}]]]]
       [:li.tag
        [:div.checkbox-wrapper
+        [(selectors/+ :input:focus :label)
+         {:text-decoration :underline}]
         [(selectors/> (selectors/+ :input :label) :*)
          {:vertical-align :text-bottom}
          [:&:after
@@ -401,6 +424,16 @@
                :text-transform :uppercase
                :font-weight 600
                :margin-left (units/em 0.25)}]]]]
+      [(selectors/+ :input:focus :label)
+       [:div.player
+        {:position :relative
+         :box-shadow [[0 0 (units/px 1) (units/px 2)]]
+         :border-radius (units/px 1)
+         :z-index 1}]]
+      [(selectors/+ :input:hover :label)
+       [:div.player
+        {:background-color (-> (color/as-rgb (theme 2))
+                               (assoc :alpha 0.025))}]]
       [:div.common-players
        {:display :flex
         :flex-wrap :wrap
